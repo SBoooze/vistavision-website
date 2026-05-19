@@ -1,0 +1,1360 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>VISTA VISION — Broadcasting Live</title>
+
+<!-- Google Fonts: Allura (cursive neon), Bebas Neue, VT323 -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Allura&family=Bebas+Neue&family=VT323&family=Special+Elite&display=swap" rel="stylesheet">
+
+<style>
+  /* ==========================================================
+     VISTA VISION // CRT TV BAND SITE
+     ========================================================== */
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; }
+
+  body {
+    font-family: 'VT323', 'Courier New', monospace;
+    color: #e8c8ff;
+    background:
+      radial-gradient(ellipse 70% 45% at 50% 95%, rgba(110, 30, 35, 0.22) 0%, transparent 40%),
+      radial-gradient(ellipse 60% 50% at 50% 50%, rgba(40, 20, 18, 0.6) 0%, transparent 40%),
+      radial-gradient(ellipse at center, #080605 0%, #040302 55%, #000 100%),
+      #000;
+    background-blend-mode: normal;
+    min-height: 100vh;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    position: relative;
+  }
+
+  /* Floor glow — subtle warm spill like the reference image */
+  body::before {
+    content: "";
+    position: absolute;
+    bottom: 3%;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 80%;
+    max-width: 1100px;
+    height: 80px;
+    background: radial-gradient(ellipse at center, rgba(180, 60, 50, 0.12) 0%, transparent 70%);
+    filter: blur(14px);
+    pointer-events: none;
+  }
+
+  /* Room grain */
+  body::after {
+    content: "";
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0.06;
+    background-image:
+      repeating-linear-gradient(0deg, rgba(255,255,255,0.5) 0px, rgba(255,255,255,0.5) 1px, transparent 1px, transparent 3px);
+    mix-blend-mode: overlay;
+    z-index: 9999;
+  }
+
+  /* ---------- TV Set ---------- */
+  .tv {
+    position: relative;
+    display: grid;
+    grid-template-columns: 1fr 120px;
+    gap: 24px;
+    width: min(900px, 95vw);
+    aspect-ratio: 16 / 11;
+    padding: 36px 30px 60px 36px;
+    background: linear-gradient(160deg, #e8d9b6 0%, #c9b890 45%, #a89773 100%);
+    border-radius: 28px;
+    box-shadow:
+      0 30px 60px rgba(0,0,0,0.7),
+      0 10px 30px rgba(0,0,0,0.5),
+      inset 0 2px 0 rgba(255,255,255,0.4),
+      inset 0 -8px 16px rgba(0,0,0,0.35),
+      inset 6px 0 10px rgba(0,0,0,0.15),
+      inset -6px 0 10px rgba(0,0,0,0.2);
+  }
+  .tv::before, .tv::after {
+    content: "";
+    position: absolute;
+    bottom: -14px;
+    width: 80px;
+    height: 18px;
+    background: linear-gradient(180deg, #8a7a5c, #4a3d2a);
+    border-radius: 0 0 6px 6px;
+    box-shadow: 0 6px 12px rgba(0,0,0,0.5);
+  }
+  .tv::before { left: 12%; }
+  .tv::after  { right: 12%; }
+
+  .screen-housing {
+    position: relative;
+    background: #1a1612;
+    border-radius: 22px;
+    padding: 14px;
+    box-shadow:
+      inset 0 0 0 2px #2a2218,
+      inset 0 6px 14px rgba(0,0,0,0.9),
+      0 0 0 3px rgba(255,255,255,0.06);
+    overflow: hidden;
+  }
+
+  .screen {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    background: #111;
+    border-radius: 38px / 28px;
+    overflow: hidden;
+    box-shadow:
+      inset 0 0 60px rgba(0,0,0,0.95),
+      inset 0 0 120px rgba(0,0,0,0.5),
+      inset 0 0 4px rgba(255,255,255,0.08);
+    isolation: isolate;
+  }
+
+  /* Permanent "no signal" static background — softer for readability */
+  .noise {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    background-color: #0e0e0e;
+    background-image:
+      repeating-conic-gradient(
+        #0a0a0a 0% 0.5%,
+        #6a6a6a 0.5% 1%,
+        #2a2a2a 1% 1.5%,
+        #141414 1.5% 2%,
+        #4a4a4a 2% 2.5%,
+        #1f1f1f 2.5% 3%
+      ),
+      repeating-linear-gradient(90deg, rgba(255,255,255,0.08) 0 1px, rgba(0,0,0,0.2) 1px 2px);
+    background-size: 9px 9px, 3px 3px;
+    animation: noiseJitter 0.22s steps(2) infinite;
+    border-radius: inherit;
+    pointer-events: none;
+    filter: contrast(0.85) brightness(0.55);
+    opacity: 0.9;
+  }
+  /* Dim layer on top of noise — gives the content a darker, more readable backdrop */
+  .noise::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse at center, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.35) 60%, rgba(0,0,0,0.2) 100%);
+    border-radius: inherit;
+  }
+  @keyframes noiseJitter {
+    0%   { background-position: 0 0, 0 0; }
+    50%  { background-position: 4px 2px, 1px 1px; }
+    100% { background-position: -3px 3px, 0 2px; }
+  }
+
+  /* Glass highlight */
+  .screen::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(ellipse at 25% 15%, rgba(255,255,255,0.10) 0%, transparent 35%),
+      radial-gradient(ellipse at 80% 90%, rgba(255,255,255,0.04) 0%, transparent 40%);
+    pointer-events: none;
+    z-index: 50;
+    border-radius: inherit;
+  }
+  /* Scanlines */
+  .screen::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: repeating-linear-gradient(
+      to bottom,
+      rgba(0,0,0,0.0) 0px,
+      rgba(0,0,0,0.35) 1px,
+      rgba(0,0,0,0.0) 2px,
+      rgba(0,0,0,0.0) 3px
+    );
+    pointer-events: none;
+    z-index: 40;
+    mix-blend-mode: multiply;
+    border-radius: inherit;
+    animation: scanShift 8s linear infinite;
+  }
+  @keyframes scanShift {
+    from { background-position: 0 0; }
+    to   { background-position: 0 4px; }
+  }
+
+  .screen-content {
+    position: absolute;
+    inset: 0;
+    z-index: 10;
+    color: #d0a0ff;
+    text-shadow:
+      0 0 2px rgba(210,160,255,0.9),
+      0 0 8px rgba(180,100,255,0.6),
+      0 0 18px rgba(180,100,255,0.3);
+    animation: flicker 4.5s infinite steps(1);
+    filter: contrast(1.05) saturate(1.15);
+  }
+  @keyframes flicker {
+    0%, 19.9%, 22%, 62.9%, 64%, 64.9%, 70%, 100% { opacity: 1; }
+    20%, 21.9%, 63%, 63.9%, 65%, 69.9%           { opacity: 0.78; }
+  }
+
+  /* Boot */
+  .boot {
+    position: absolute;
+    inset: 0;
+    background: #000;
+    z-index: 70;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: inherit;
+    pointer-events: none;
+  }
+  .boot-line {
+    width: 90%;
+    height: 100%;
+    background: #fff;
+    box-shadow: 0 0 40px #fff, 0 0 80px rgba(230,200,255,0.8);
+    transform-origin: center;
+    animation: boot 1.6s ease-out forwards;
+  }
+  @keyframes boot {
+    0%   { transform: scale(0.0, 0.004); opacity: 1; }
+    18%  { transform: scale(1.0, 0.004); opacity: 1; }
+    55%  { transform: scale(1.0, 1.0);   opacity: 0.85; background: #d8ffe6; }
+    100% { transform: scale(1.0, 1.0);   opacity: 0; background: #000; }
+  }
+  .boot.done { display: none; }
+
+  /* Static */
+  .static {
+    position: absolute;
+    inset: 0;
+    z-index: 60;
+    background-color: #aaa;
+    opacity: 0;
+    pointer-events: none;
+    border-radius: inherit;
+    background-image:
+      repeating-conic-gradient(#000 0% 0.5%, #fff 0.5% 1%, #888 1% 1.5%, #222 1.5% 2%, #ccc 2% 2.5%),
+      repeating-linear-gradient(90deg, rgba(255,255,255,0.5) 0 1px, rgba(0,0,0,0.5) 1px 2px);
+    background-size: 12px 12px, 4px 4px;
+    mix-blend-mode: screen;
+  }
+  .static.on {
+    opacity: 0.95;
+    animation: staticJitter 0.05s steps(2) infinite;
+  }
+  @keyframes staticJitter {
+    0%   { background-position: 0 0, 0 0; }
+    100% { background-position: 7px 13px, 3px 1px; }
+  }
+
+  /* ---------- Channels ---------- */
+  .channels {
+    position: absolute;
+    inset: 0;
+    z-index: 10;
+  }
+  .channel {
+    position: absolute;
+    inset: 0;
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    padding: 4% 5%;
+    text-align: center;
+    overflow-y: auto;
+    overflow-x: hidden;
+    scrollbar-width: thin;
+    scrollbar-color: #a050dc rgba(25,10,45,0.3);
+  }
+  .channel.active { display: flex; justify-content: flex-start; }
+  /* HOME channel stays vertically centered; LIVE / NEWS / CONTACT anchor from the top
+     so their section titles always land at the same height when switching. */
+  .channel.active[data-ch="1"] { justify-content: center; }
+  .channel::-webkit-scrollbar { width: 8px; }
+  .channel::-webkit-scrollbar-track { background: rgba(25,10,45,0.3); border-radius: 4px; }
+  .channel::-webkit-scrollbar-thumb {
+    background: #a050dc;
+    border-radius: 4px;
+    box-shadow: 0 0 8px rgba(180,100,255,0.6) inset;
+  }
+  .channel::-webkit-scrollbar-thumb:hover { background: #b06fe0; }
+
+  /* On-screen badge — kept green (phosphor CRT look) */
+  .channel-badge {
+    position: absolute;
+    top: 18px;
+    right: 24px;
+    font-size: 22px;
+    letter-spacing: 2px;
+    color: #b8ffcc;
+    text-shadow:
+      0 0 2px rgba(155,255,194,0.9),
+      0 0 8px rgba(80,255,140,0.6),
+      0 0 18px rgba(80,255,140,0.3);
+    opacity: 0.85;
+    z-index: 20;
+  }
+  .channel-badge .rec {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    background: #ff5050;
+    border-radius: 50%;
+    margin-right: 8px;
+    vertical-align: middle;
+    box-shadow: 0 0 8px #ff5050, 0 0 16px #ff5050;
+    animation: rec 1.2s steps(1) infinite;
+  }
+  @keyframes rec {
+    0%, 49% { opacity: 1; }
+    50%, 100% { opacity: 0.25; }
+  }
+
+  /* ====================================================
+     CH 1: HOME — cursive neon logo (Blue Velvet / Brazil)
+     ==================================================== */
+  .logo {
+    font-family: 'Allura', cursive;
+    font-weight: 400;
+    font-size: clamp(50px, 10vw, 120px);
+    line-height: 0.85;
+    max-width: 92%;
+    /* Override the green phosphor text-shadow from .screen-content */
+    color: #fff;
+    text-shadow:
+      /* Bright white inner core (tube highlight) */
+      0 0 1px #ffffff,
+      0 0 3px #ffffff,
+      0 0 7px #ffffff,
+      /* Chromatic neon offset — red right / blue left */
+      3px 1px 10px rgba(255,60,90,0.95),
+     -3px -1px 10px rgba(80,150,255,0.95),
+      /* Outer halo */
+      0 0 24px rgba(255,120,160,0.55),
+      0 0 50px rgba(120,170,255,0.4),
+      0 0 90px rgba(180,200,255,0.25);
+    transform: rotate(-3deg);
+    display: inline-block;
+    padding: 8px 14px;
+    animation: neonFlicker 5s steps(1) infinite, neonPulse 3.4s ease-in-out infinite alternate;
+  }
+  @keyframes neonFlicker {
+    0%, 17.9%, 18.6%, 36.9%, 37.4%, 73.9%, 74.4%, 100% { opacity: 1; }
+    18%, 18.5% { opacity: 0.35; }
+    37%, 37.3% { opacity: 0.7;  }
+    74%, 74.3% { opacity: 0.5;  }
+  }
+  @keyframes neonPulse {
+    from {
+      filter: brightness(1) drop-shadow(0 0 12px rgba(255,120,160,0.35));
+    }
+    to {
+      filter: brightness(1.12) drop-shadow(0 0 22px rgba(255,140,180,0.55));
+    }
+  }
+
+  .sub {
+    margin-top: 14px;
+    font-size: clamp(12px, 1.6vw, 18px);
+    letter-spacing: 5px;
+    color: #d0a0ff;
+    opacity: 0.9;
+  }
+  .sub::before, .sub::after {
+    content: " ◆ ";
+    color: #b06fe0;
+  }
+  .home-meta {
+    margin-top: 8px;
+    font-size: clamp(11px, 1.2vw, 13px);
+    color: #b87fd9;
+    letter-spacing: 3px;
+    opacity: 0.7;
+  }
+
+  /* Band picture + socials — delayed reveal */
+  .band-reveal {
+    width: 100%;
+    margin-top: 0;
+    max-height: 0;
+    opacity: 0;
+    overflow: hidden;
+    transition: max-height 1.2s ease, opacity 1.2s ease-in-out, margin-top 0.9s ease;
+  }
+  .band-reveal.show {
+    max-height: 360px;
+    opacity: 1;
+    margin-top: 14px;
+  }
+  .band-pic-wrap {
+    display: inline-block;
+    position: relative;
+    padding: 6px;
+    background: #050805;
+    border: 2px solid #a050dc;
+    box-shadow:
+      0 0 22px rgba(180,100,255,0.35),
+      0 0 40px rgba(180,100,255,0.18);
+  }
+  .band-pic-wrap::before {
+    /* slight CRT scanlines overlaid on the picture */
+    content: "";
+    position: absolute;
+    inset: 6px;
+    background: repeating-linear-gradient(to bottom, transparent 0 2px, rgba(0,0,0,0.32) 2px 3px);
+    pointer-events: none;
+    z-index: 2;
+    mix-blend-mode: multiply;
+  }
+  .band-pic-wrap::after {
+    /* soft green tint */
+    content: "";
+    position: absolute;
+    inset: 6px;
+    background: linear-gradient(180deg, rgba(180,100,255,0.05) 0%, rgba(180,100,255,0.13) 100%);
+    pointer-events: none;
+    z-index: 2;
+    mix-blend-mode: screen;
+  }
+  .band-pic {
+    display: block;
+    width: 100%;
+    max-width: min(280px, 60vw);
+    height: auto;
+    max-height: 160px;
+    object-fit: cover;
+    filter: contrast(1.08) saturate(0.65) brightness(0.92);
+  }
+
+  /* Social icons */
+  .socials {
+    margin-top: 12px;
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+  .social-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    color: #ecd0ff;
+    text-decoration: none;
+    border: 1px solid #a050dc;
+    border-radius: 6px;
+    background: rgba(25,10,45,0.45);
+    box-shadow: 0 0 10px rgba(180,100,255,0.22), inset 0 0 8px rgba(180,100,255,0.1);
+    transition: transform 0.15s, background 0.2s, box-shadow 0.2s, color 0.2s;
+  }
+  .social-icon:hover {
+    background: rgba(180,100,255,0.18);
+    box-shadow: 0 0 18px rgba(180,100,255,0.7), inset 0 0 12px rgba(180,100,255,0.25);
+    transform: translateY(-2px);
+    color: #fff;
+  }
+  .social-icon:active { transform: translateY(0); }
+  .social-icon svg {
+    width: 18px;
+    height: 18px;
+    fill: currentColor;
+    filter: drop-shadow(0 0 4px rgba(200,140,255,0.6));
+  }
+
+  /* ====================================================
+     CH 2: LIVE  (tour)
+     ==================================================== */
+  .live {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 18px;
+  }
+  .live-title {
+    font-family: 'Bebas Neue', 'Impact', sans-serif;
+    font-size: clamp(26px, 4.5vw, 50px);
+    letter-spacing: 8px;
+    color: #ecd0ff;
+    margin-top: 20px;
+    text-shadow: 0 0 10px rgba(200,140,255,0.8), 0 0 22px rgba(180,100,255,0.4);
+  }
+  .marquee {
+    width: 92%;
+    overflow: hidden;
+    border-top: 2px solid #a050dc;
+    border-bottom: 2px solid #a050dc;
+    padding: 10px 0;
+    background: rgba(30,10,50,0.3);
+    box-shadow: 0 0 20px rgba(180,100,255,0.2) inset;
+  }
+  .marquee-track {
+    display: inline-block;
+    white-space: nowrap;
+    font-size: clamp(18px, 2.6vw, 28px);
+    letter-spacing: 6px;
+    color: #ecd0ff;
+    text-shadow: 0 0 8px rgba(200,140,255,0.9);
+    animation: marquee 18s linear infinite;
+    padding-left: 100%;
+  }
+  @keyframes marquee {
+    from { transform: translateX(0); }
+    to   { transform: translateX(-100%); }
+  }
+  .live-list {
+    width: 92%;
+    border-left: 1px dashed #a050dc;
+    border-right: 1px dashed #a050dc;
+    padding: 6px 0;
+  }
+  .live-row {
+    display: grid;
+    grid-template-columns: 1fr auto 1.4fr;
+    gap: 8px;
+    align-items: baseline;
+    padding: 10px 16px;
+    font-size: clamp(13px, 1.8vw, 18px);
+    letter-spacing: 2px;
+    color: #ecd0ff;
+    border-bottom: 1px dashed rgba(180,120,220,0.35);
+    text-align: left;
+  }
+  .live-row:last-child { border-bottom: none; }
+  .live-row .date {
+    color: #fff;
+    text-shadow: 0 0 8px rgba(200,140,255,0.7);
+    font-weight: bold;
+  }
+  .live-row .dash {
+    color: #b06fe0;
+    text-align: center;
+    letter-spacing: 0;
+  }
+  .live-row .venue {
+    color: #d0a0ff;
+    text-align: right;
+    letter-spacing: 1.5px;
+  }
+  .live-row.tba { opacity: 0.85; }
+  .live-row.tba .date { color: #ffd47a; text-shadow: 0 0 6px rgba(255,212,122,0.5); }
+
+  /* ====================================================
+     CH 3: MERCH
+     ==================================================== */
+  .merch {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 30px;
+    width: 92%;
+    align-items: center;
+  }
+  .merch-item {
+    text-align: center;
+    color: #e8c8ff;
+  }
+  .merch-art {
+    font-family: 'Courier New', monospace;
+    font-size: clamp(7px, 1vw, 11px);
+    line-height: 1.05;
+    white-space: pre;
+    color: #ecd0ff;
+    text-shadow: 0 0 4px rgba(200,140,255,0.8);
+    display: inline-block;
+    margin-bottom: 10px;
+  }
+  .merch-label {
+    font-size: 16px;
+    letter-spacing: 3px;
+    margin-top: 6px;
+  }
+  .merch-price {
+    font-size: 14px;
+    color: #b87fd9;
+    letter-spacing: 2px;
+    margin-top: 2px;
+  }
+  .merch-buy {
+    display: inline-block;
+    margin-top: 8px;
+    padding: 4px 12px;
+    border: 1px solid #a050dc;
+    color: #ecd0ff;
+    text-decoration: none;
+    font-size: 12px;
+    letter-spacing: 2px;
+    background: rgba(25,10,45,0.4);
+    transition: background 0.2s, box-shadow 0.2s;
+  }
+  .merch-buy:hover {
+    background: rgba(180,100,255,0.2);
+    box-shadow: 0 0 12px rgba(180,100,255,0.5);
+  }
+
+  /* ====================================================
+     CH 4: NEWS — newsletter + markdown posts
+     ==================================================== */
+  .news {
+    width: 92%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 18px;
+  }
+  .news-title {
+    font-family: 'Bebas Neue', 'Impact', sans-serif;
+    font-size: clamp(26px, 4.5vw, 50px);
+    letter-spacing: 8px;
+    color: #ecd0ff;
+    margin-top: 20px;
+    text-shadow: 0 0 10px rgba(200,140,255,0.8), 0 0 22px rgba(180,100,255,0.4);
+  }
+  /* Telegram CTA — same style as the contact button */
+  .telegram-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 24px;
+    border: 2px solid #a050dc;
+    background: rgba(25,10,45,0.5);
+    color: #ecd0ff;
+    text-decoration: none;
+    font-family: 'Bebas Neue', 'Impact', sans-serif;
+    font-size: clamp(16px, 2vw, 22px);
+    letter-spacing: 4px;
+    text-shadow: 0 0 6px rgba(200,140,255,0.7);
+    box-shadow:
+      0 0 22px rgba(180,100,255,0.35),
+      inset 0 0 14px rgba(180,100,255,0.2);
+    transition: background 0.2s, box-shadow 0.2s, transform 0.15s;
+  }
+  .telegram-btn:hover {
+    background: rgba(180,100,255,0.22);
+    box-shadow:
+      0 0 32px rgba(180,100,255,0.7),
+      inset 0 0 18px rgba(180,100,255,0.35);
+    transform: translateY(-2px);
+  }
+  .telegram-btn:active { transform: translateY(0); }
+  .telegram-btn .arrow { transition: transform 0.2s; }
+  .telegram-btn:hover .arrow { transform: translateX(4px); }
+
+  .posts {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    text-align: left;
+  }
+  .posts-hd {
+    font-size: 12px;
+    letter-spacing: 3px;
+    color: #b06fe0;
+    border-bottom: 1px solid rgba(180,120,220,0.4);
+    padding-bottom: 4px;
+  }
+  .post {
+    border: 1px dashed rgba(180,120,220,0.5);
+    background: rgba(25,10,45,0.25);
+    padding: 12px 14px;
+  }
+  .post-meta {
+    font-size: 11px;
+    letter-spacing: 2px;
+    color: #b06fe0;
+    margin-bottom: 4px;
+  }
+  .post-title {
+    font-size: 18px;
+    letter-spacing: 2px;
+    color: #ecd0ff;
+    margin-bottom: 6px;
+    text-shadow: 0 0 6px rgba(200,140,255,0.6);
+  }
+  .post-body {
+    font-size: 14px;
+    line-height: 1.55;
+    color: #d0a0ff;
+    letter-spacing: 0.5px;
+  }
+  .post-body p { margin: 4px 0; }
+  .post-body strong { color: #fff; text-shadow: 0 0 6px rgba(200,140,255,0.6); }
+  .post-body em { color: #ffd47a; font-style: italic; }
+  .post-body a { color: #ecd0ff; border-bottom: 1px dotted #a050dc; text-decoration: none; }
+  .post-body a:hover { color: #fff; }
+  .post-body ul { margin: 4px 0 4px 18px; }
+  .post-body li { list-style: square; }
+
+  /* ====================================================
+     CH 5: CONTACT
+     ==================================================== */
+  .contact {
+    width: 92%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+  }
+  .contact-title {
+    font-family: 'Bebas Neue', 'Impact', sans-serif;
+    font-size: clamp(26px, 4.5vw, 50px);
+    letter-spacing: 8px;
+    margin-top: 20px;
+    color: #ecd0ff;
+    text-shadow: 0 0 10px rgba(200,140,255,0.8), 0 0 22px rgba(180,100,255,0.4);
+  }
+  .contact-text {
+    max-width: 480px;
+    font-size: clamp(13px, 1.7vw, 16px);
+    color: #d0a0ff;
+    line-height: 1.5;
+    letter-spacing: 1.5px;
+  }
+  .contact-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 28px;
+    border: 2px solid #a050dc;
+    background: rgba(25,10,45,0.5);
+    color: #ecd0ff;
+    text-decoration: none;
+    font-family: 'Bebas Neue', 'Impact', sans-serif;
+    font-size: clamp(18px, 2.4vw, 24px);
+    letter-spacing: 5px;
+    text-shadow: 0 0 6px rgba(200,140,255,0.7);
+    box-shadow:
+      0 0 22px rgba(180,100,255,0.35),
+      inset 0 0 14px rgba(180,100,255,0.2);
+    transition: background 0.2s, box-shadow 0.2s, transform 0.15s;
+  }
+  .contact-btn:hover {
+    background: rgba(180,100,255,0.22);
+    box-shadow:
+      0 0 32px rgba(180,100,255,0.7),
+      inset 0 0 18px rgba(180,100,255,0.35);
+    transform: translateY(-2px);
+  }
+  .contact-btn:active { transform: translateY(0); }
+  .contact-btn .arrow {
+    display: inline-block;
+    transition: transform 0.2s;
+  }
+  .contact-btn:hover .arrow { transform: translateX(4px); }
+
+  .contact-foot {
+    font-size: 12px;
+    letter-spacing: 3px;
+    color: #b06fe0;
+    opacity: 0.85;
+  }
+  .contact-foot .blink {
+    animation: blink 1s steps(1) infinite;
+  }
+  @keyframes blink {
+    0%, 49% { opacity: 1; }
+    50%, 100% { opacity: 0; }
+  }
+
+  /* ---------- Control panel ---------- */
+  .panel {
+    background: linear-gradient(180deg, #c9b890 0%, #a89773 100%);
+    border-radius: 14px;
+    padding: 18px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    box-shadow:
+      inset 0 2px 0 rgba(255,255,255,0.5),
+      inset 0 -6px 10px rgba(0,0,0,0.3),
+      0 0 0 2px rgba(0,0,0,0.1);
+  }
+  .panel-label {
+    text-align: center;
+    font-size: 11px;
+    color: #4a3d2a;
+    letter-spacing: 2px;
+    font-family: 'Courier New', monospace;
+    margin-bottom: 2px;
+    text-transform: uppercase;
+    font-weight: bold;
+  }
+
+  .btn {
+    position: relative;
+    width: 100%;
+    height: 50px;
+    border: none;
+    background: linear-gradient(180deg, #f4e8c8 0%, #d4c194 60%, #a89773 100%);
+    color: #2a2218;
+    font-weight: 900;
+    cursor: pointer;
+    border-radius: 6px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    line-height: 1;
+    box-shadow:
+      inset 0 2px 0 rgba(255,255,255,0.7),
+      0 6px 0 #6e5e44,
+      0 8px 14px rgba(0,0,0,0.5),
+      inset 0 -2px 0 rgba(0,0,0,0.15);
+    transition: transform 0.08s ease, box-shadow 0.08s ease, background 0.2s;
+    font-family: 'Courier New', monospace;
+    text-shadow: 0 1px 0 rgba(255,255,255,0.4);
+    user-select: none;
+  }
+  .btn:hover {
+    background: linear-gradient(180deg, #fbf0d4 0%, #dec99c 60%, #b09c78 100%);
+  }
+  .btn:active, .btn.pressed {
+    transform: translateY(5px);
+    box-shadow:
+      inset 0 2px 4px rgba(0,0,0,0.4),
+      0 1px 0 #6e5e44,
+      0 2px 4px rgba(0,0,0,0.4),
+      inset 0 -1px 0 rgba(0,0,0,0.15);
+  }
+  .btn.active {
+    background: linear-gradient(180deg, #f8eccc 0%, #e2cf9c 60%, #b09c78 100%);
+  }
+  .btn.active::after {
+    content: "";
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #ff5050;
+    box-shadow: 0 0 8px #ff5050, 0 0 14px #ff5050;
+  }
+  .btn .btn-ch {
+    font-size: 14px;
+    letter-spacing: 2px;
+  }
+  .btn .btn-name {
+    font-size: 9px;
+    letter-spacing: 1px;
+    opacity: 0.75;
+    font-weight: 700;
+  }
+
+  .power-led {
+    margin-top: auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+  }
+  .led {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #c060ff;
+    box-shadow: 0 0 6px #c060ff, 0 0 14px rgba(195,100,255,0.5);
+  }
+  .power-led .lbl { font-size: 10px; color: #4a3d2a; letter-spacing: 2px; }
+
+  .brand-plate {
+    position: absolute;
+    bottom: 14px;
+    left: 24px;
+    font-family: 'Courier New', monospace;
+    font-size: 10px;
+    letter-spacing: 3px;
+    color: #4a3d2a;
+    opacity: 0.7;
+    text-transform: uppercase;
+    font-weight: bold;
+    white-space: nowrap;
+    pointer-events: none;
+  }
+
+  /* ---------- Responsive ---------- */
+  @media (max-width: 640px) {
+    body { padding: 10px; }
+    .tv {
+      grid-template-columns: 1fr;
+      grid-template-rows: 1fr auto;
+      aspect-ratio: auto;
+      padding: 16px 14px 32px 14px;
+      gap: 14px;
+      width: min(420px, 96vw);
+    }
+    .screen-housing { min-height: 70vw; }
+    .panel {
+      flex-direction: row;
+      flex-wrap: wrap;
+      justify-content: center;
+      padding: 12px;
+      gap: 8px;
+    }
+    .panel-label { display: none; }
+    .btn { width: 54px; height: 42px; }
+    .power-led { display: none; }
+    .merch { grid-template-columns: 1fr; gap: 14px; }
+    .merch-art { font-size: 6px; }
+    .live-row { grid-template-columns: 1fr; gap: 2px; text-align: center; padding: 8px 10px; }
+    .live-row .dash { display: none; }
+    .live-row .venue { text-align: center; }
+
+    /* Compact home content on mobile */
+    .logo { font-size: clamp(44px, 13vw, 80px); }
+    .sub { margin-top: 10px; letter-spacing: 3px; }
+    .home-meta { margin-top: 6px; }
+    .band-reveal.show { max-height: 280px; margin-top: 10px; }
+    .band-pic { max-height: 130px; max-width: min(220px, 60vw); }
+    .social-icon { width: 32px; height: 32px; }
+    .social-icon svg { width: 16px; height: 16px; }
+    .channel-badge { font-size: 16px; top: 12px; right: 14px; }
+  }
+</style>
+</head>
+<body>
+
+  <div class="tv" role="region" aria-label="Vista Vision retro TV">
+
+    <!-- SCREEN -->
+    <div class="screen-housing">
+      <div class="screen" id="screen">
+
+        <div class="noise"></div>
+        <div class="boot" id="boot"><div class="boot-line"></div></div>
+        <div class="static" id="static"></div>
+
+        <div class="screen-content">
+
+          <div class="channel-badge" id="badge"><span class="rec"></span>CH 01 · HOME</div>
+
+          <div class="channels">
+
+            <!-- ============= CH 1: HOME ============= -->
+            <section class="channel active" data-ch="1">
+              <h1 class="logo">Vista&nbsp;Vision</h1>
+
+              <!-- Delayed reveal: band picture + social icons -->
+              <div class="band-reveal" id="bandReveal">
+                <div class="band-pic-wrap">
+                  <img class="band-pic" src="assets/band_pic.jpg" alt="Vista Vision band photo">
+                </div>
+                <div class="socials">
+                  <a class="social-icon" href="https://on.soundcloud.com/Ii0FRxS4XfAWE6CjOm" target="_blank" rel="noopener" aria-label="SoundCloud">
+                    <!-- SoundCloud -->
+                    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M1.5 13.5v3M3.5 12v4.5M5.5 11v5.5M7.5 10v6.5" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round"/><path d="M10 9c0-.4.3-.7.7-.7s.7.3.7.7v8c0 .4-.3.7-.7.7s-.7-.3-.7-.7zm3-1.5c0-.4.3-.7.7-.7s.7.3.7.7V17c0 .4-.3.7-.7.7s-.7-.3-.7-.7zM17 6c-.4 0-.8.1-1.1.2-.1-2.4-2-4.2-4.4-4.2-1.1 0-2.1.4-2.9 1V17h8.4c1.9 0 3.5-1.6 3.5-3.5S18.9 10 17 10c-.3 0-.5 0-.7.1.1-.4.2-.8.2-1.3 0-1.5-1.2-2.8-2.7-2.8z" fill="currentColor"/></svg>
+                  </a>
+                  <a class="social-icon" href="https://www.instagram.com/vistavisionband/" target="_blank" rel="noopener" aria-label="Instagram">
+                    <!-- Instagram -->
+                    <svg viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/></g><circle cx="17.5" cy="6.5" r="1.2" fill="currentColor"/></svg>
+                  </a>
+                  <a class="social-icon" href="https://www.tiktok.com/@vistavisionband" target="_blank" rel="noopener" aria-label="TikTok">
+                    <!-- TikTok -->
+                    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M14 2v3.2c0 2.1 1.7 3.8 3.8 3.8h.8V12c-1.6 0-3.1-.5-4.3-1.4l-.3-.2v6.1c0 3-2.5 5.5-5.5 5.5S3 19.5 3 16.5 5.5 11 8.5 11c.5 0 1 .1 1.5.2v3.2c-.4-.2-.9-.4-1.5-.4-1.3 0-2.5 1.1-2.5 2.5s1.1 2.5 2.5 2.5 2.5-1.1 2.5-2.5V2H14z"/></svg>
+                  </a>
+                  <a class="social-icon" href="https://www.facebook.com/profile.php?id=61584714924639" target="_blank" rel="noopener" aria-label="Facebook">
+                    <!-- Facebook -->
+                    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M22 12c0-5.5-4.5-10-10-10S2 6.5 2 12c0 5 3.7 9.1 8.4 9.9V15H7.9v-3h2.5V9.8c0-2.5 1.5-3.8 3.7-3.8 1.1 0 2.2.2 2.2.2v2.4h-1.2c-1.2 0-1.6.7-1.6 1.5V12h2.7l-.4 3h-2.3v6.9C18.3 21.1 22 17 22 12z"/></svg>
+                  </a>
+                  <a class="social-icon" href="https://tr.ee/hNNLOWEwpk" target="_blank" rel="noopener" aria-label="Linktree">
+                    <!-- Linktree -->
+                    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M11 2h2v6.3l4.5-4.5 1.4 1.4L14.4 9.7H21v2h-6.6l4.5 4.5-1.4 1.4L13 13.1V22h-2v-8.9l-4.5 4.5-1.4-1.4L9.6 11.7H3v-2h6.6L5.1 5.2 6.5 3.8 11 8.3V2z"/></svg>
+                  </a>
+                </div>
+              </div>
+            </section>
+
+            <!-- ============= CH 2: LIVE ============= -->
+            <section class="channel" data-ch="2">
+              <div class="live">
+                <div class="live-title">// LIVE //</div>
+                <div class="marquee">
+                  <div class="marquee-track">
+                    QUEDLINBURG &nbsp;◆&nbsp; BERLIN KREUZBERG &nbsp;◆&nbsp; WEST GERMANY &nbsp;◆&nbsp; MORE TBA &nbsp;◆&nbsp;
+                  </div>
+                </div>
+                <div class="live-list">
+                  <div class="live-row">
+                    <div class="date">30TH MAY</div>
+                    <div class="dash">—</div>
+                    <div class="venue">REICHE, QUEDLINBURG</div>
+                  </div>
+                  <div class="live-row">
+                    <div class="date">21ST JUNE</div>
+                    <div class="dash">—</div>
+                    <div class="venue">EXIT, BERLIN KREUZBERG</div>
+                  </div>
+                  <div class="live-row tba">
+                    <div class="date">AUGUST (TBA)</div>
+                    <div class="dash">—</div>
+                    <div class="venue">WEST GERMANY, BERLIN KREUZBERG</div>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <!-- ============= CH 3: MERCH (temporarily hidden — will be re-enabled later) =============
+            <section class="channel" data-ch="3">
+              <div class="merch">
+                <div class="merch-item">
+<pre class="merch-art">      _______________
+     /   _________   \
+    /   /         \   \
+   /   /           \   \
+  |   |  V I S T A  |   |
+  |   |   V I S I   |   |
+  |   |   O N _ _   |   |
+   \   \           /   /
+    \   \_________/   /
+     \_______________/
+      |    |   |    |
+      |    |   |    |
+      |____|   |____|</pre>
+                  <div class="merch-label">TOUR TEE — BLK</div>
+                  <div class="merch-price">€ 28.00</div>
+                  <a class="merch-buy" href="mailto:vistavision.music@gmail.com?subject=Tour%20Tee%20order">BUY ›</a>
+                </div>
+                <div class="merch-item">
+<pre class="merch-art">     ___________________
+    /  ___________________  \
+   /  /                   \  \
+  |  |   ◯ ◯ ◯ ◯ ◯ ◯ ◯   |  |
+  |  |  ◯ ╱ ROOM 12 ╲ ◯  |  |
+  |  |  ◯ │  VISTA  │ ◯  |  |
+  |  |  ◯ │ VISION  │ ◯  |  |
+  |  |  ◯ ╲ ── 33 ╱ ◯  |  |
+  |  |   ◯ ◯ ◯ ◯ ◯ ◯ ◯   |  |
+   \  \___________________/  /
+    \_______________________/</pre>
+                  <div class="merch-label">LP "ROOM 12" — VINYL</div>
+                  <div class="merch-price">€ 32.00</div>
+                  <a class="merch-buy" href="mailto:vistavision.music@gmail.com?subject=Vinyl%20order">BUY ›</a>
+                </div>
+              </div>
+            </section>
+            ============= /CH 3: MERCH ============= -->
+
+            <!-- ============= CH 3: NEWS ============= -->
+            <section class="channel" data-ch="3">
+              <div class="news">
+                <div class="news-title">// NEWS //</div>
+
+                <!-- Telegram channel CTA -->
+                <a class="telegram-btn" href="https://t.me/+q8I9L3ka7TJjYTI6" target="_blank" rel="noopener">
+                  JOIN TELEGRAM CHANNEL <span class="arrow">›</span>
+                </a>
+
+                <!-- Markdown posts: fetched from /posts/ -->
+                <div class="posts">
+                  <div class="posts-hd">&gt; LATEST POSTS</div>
+                  <div id="postList">
+                    <!-- Posts render here -->
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <!-- ============= CH 4: CONTACT ============= -->
+            <section class="channel" data-ch="4">
+              <div class="contact">
+                <div class="contact-title">// CONTACT //</div>
+                <div class="contact-text">
+                  Booking, press, collaborations, or just to say hi —
+                  drop us a line and we'll get back to you.
+                </div>
+                <a class="contact-btn" id="contactBtn"
+                   href="mailto:vistavision.music@gmail.com?subject=Hello%20Vista%20Vision&body=Hi%20Vista%20Vision%2C%0A%0A">
+                  SEND MESSAGE <span class="arrow">›</span>
+                </a>
+                <div class="contact-foot">&gt; vistavision.music@gmail.com<span class="blink">_</span></div>
+              </div>
+            </section>
+
+          </div><!-- /.channels -->
+        </div><!-- /.screen-content -->
+
+      </div><!-- /.screen -->
+    </div><!-- /.screen-housing -->
+
+    <!-- CONTROL PANEL -->
+    <div class="panel" aria-label="Channel selector">
+      <div class="panel-label">CHANNEL</div>
+      <button class="btn active" data-ch="1" aria-label="Channel 1 — Home">
+        <span class="btn-ch">CH 1</span><span class="btn-name">HOME</span>
+      </button>
+      <button class="btn" data-ch="2" aria-label="Channel 2 — Live">
+        <span class="btn-ch">CH 2</span><span class="btn-name">LIVE</span>
+      </button>
+      <!-- CH 3 (MERCH) hidden for now — re-enable later
+      <button class="btn" data-ch="3" aria-label="Channel 3 — Merch">
+        <span class="btn-ch">CH 3</span><span class="btn-name">MERCH</span>
+      </button>
+      -->
+      <button class="btn" data-ch="3" aria-label="Channel 3 — News">
+        <span class="btn-ch">CH 3</span><span class="btn-name">NEWS</span>
+      </button>
+      <button class="btn" data-ch="4" aria-label="Channel 4 — Contact">
+        <span class="btn-ch">CH 4</span><span class="btn-name">CONTACT</span>
+      </button>
+      <div class="power-led">
+        <div class="led"></div>
+        <div class="lbl">PWR</div>
+      </div>
+    </div>
+
+    <div class="brand-plate">VISTA · MODEL VV · 2026</div>
+  </div>
+
+<script>
+/* ==========================================================
+   VISTA VISION // CRT TV — interaction logic
+   ========================================================== */
+(function () {
+  'use strict';
+
+  const boot     = document.getElementById('boot');
+  const staticEl = document.getElementById('static');
+  const badge    = document.getElementById('badge');
+  const buttons  = document.querySelectorAll('.btn[data-ch]');
+  const channels = document.querySelectorAll('.channel');
+  const bandReveal = document.getElementById('bandReveal');
+  const postList = document.getElementById('postList');
+
+  const CH_NAMES = { '1': 'HOME', '2': 'LIVE', '3': 'NEWS', '4': 'CONTACT' };
+
+  /* ---------- Web Audio ---------- */
+  let audioCtx = null;
+  function ensureAudio() {
+    if (!audioCtx) {
+      const Ctx = window.AudioContext || window.webkitAudioContext;
+      if (Ctx) audioCtx = new Ctx();
+    }
+    return audioCtx;
+  }
+  function playClick() {
+    const ctx = ensureAudio(); if (!ctx) return;
+    const now = ctx.currentTime;
+    const osc = ctx.createOscillator();
+    const oscGain = ctx.createGain();
+    osc.type = 'square';
+    osc.frequency.setValueAtTime(180, now);
+    osc.frequency.exponentialRampToValueAtTime(60, now + 0.06);
+    oscGain.gain.setValueAtTime(0.0001, now);
+    oscGain.gain.exponentialRampToValueAtTime(0.18, now + 0.005);
+    oscGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.09);
+    osc.connect(oscGain).connect(ctx.destination);
+    osc.start(now); osc.stop(now + 0.1);
+
+    const bufferSize = ctx.sampleRate * 0.05;
+    const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+    const data = buffer.getChannelData(0);
+    for (let i = 0; i < bufferSize; i++) data[i] = (Math.random() * 2 - 1) * 0.6;
+    const noise = ctx.createBufferSource();
+    noise.buffer = buffer;
+    const noiseGain = ctx.createGain();
+    noiseGain.gain.setValueAtTime(0.12, now);
+    noiseGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.05);
+    const filter = ctx.createBiquadFilter();
+    filter.type = 'lowpass';
+    filter.frequency.value = 1600;
+    noise.connect(filter).connect(noiseGain).connect(ctx.destination);
+    noise.start(now); noise.stop(now + 0.05);
+  }
+  function playStaticBurst(duration) {
+    duration = duration || 0.45;
+    const ctx = ensureAudio(); if (!ctx) return;
+    const now = ctx.currentTime;
+    const bufferSize = ctx.sampleRate * duration;
+    const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+    const data = buffer.getChannelData(0);
+    for (let i = 0; i < bufferSize; i++) data[i] = (Math.random() * 2 - 1);
+    const noise = ctx.createBufferSource(); noise.buffer = buffer;
+    const gain = ctx.createGain();
+    gain.gain.setValueAtTime(0.0001, now);
+    gain.gain.exponentialRampToValueAtTime(0.08, now + 0.02);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+    const hp = ctx.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.value = 800;
+    noise.connect(hp).connect(gain).connect(ctx.destination);
+    noise.start(now); noise.stop(now + duration);
+  }
+
+  /* ---------- Boot ---------- */
+  window.addEventListener('load', () => {
+    setTimeout(() => boot.classList.add('done'), 1700);
+
+    // 3s after load: reveal band picture + socials on home screen
+    setTimeout(() => {
+      if (bandReveal) bandReveal.classList.add('show');
+    }, 3000);
+
+    // Kick off post loading for the NEWS channel
+    loadPosts();
+  });
+
+  /* ---------- Channel switching ---------- */
+  let switching = false;
+  function switchChannel(targetCh) {
+    if (switching) return;
+    const current = document.querySelector('.channel.active');
+    if (current && current.dataset.ch === String(targetCh)) return;
+
+    switching = true;
+    buttons.forEach(b => b.classList.toggle('active', b.dataset.ch === String(targetCh)));
+
+    staticEl.classList.add('on');
+    playStaticBurst(0.45);
+
+    setTimeout(() => {
+      channels.forEach(c => c.classList.toggle('active', c.dataset.ch === String(targetCh)));
+      const num = String(targetCh).padStart(2, '0');
+      badge.innerHTML = '<span class="rec"></span>CH ' + num + ' · ' + (CH_NAMES[targetCh] || '');
+      staticEl.classList.remove('on');
+      switching = false;
+    }, 500);
+  }
+
+  buttons.forEach(btn => {
+    btn.addEventListener('click', () => {
+      playClick();
+      btn.classList.add('pressed');
+      setTimeout(() => btn.classList.remove('pressed'), 110);
+      switchChannel(btn.dataset.ch);
+    });
+  });
+
+  // Keyboard 1-4
+  document.addEventListener('keydown', (e) => {
+    if (['1','2','3','4'].includes(e.key)) {
+      const tag = (document.activeElement && document.activeElement.tagName) || '';
+      // Don't intercept while typing in form fields
+      if (tag === 'INPUT' || tag === 'TEXTAREA') return;
+      const btn = document.querySelector('.btn[data-ch="' + e.key + '"]');
+      if (btn) btn.click();
+    }
+  });
+
+  /* ---------- Markdown post rendering ---------- */
+  // List of post files (GitHub Pages serves these as static text).
+  const POSTS = [
+    'posts/2026-05-12-back-in-the-studio.md',
+    'posts/2026-04-22-spring-tour-announced.md',
+    'posts/2026-03-08-room-12-pressing.md'
+  ];
+
+  function parseFrontmatter(raw) {
+    const m = raw.match(/^---\s*\n([\s\S]+?)\n---\s*\n([\s\S]*)$/);
+    if (!m) return { meta: {}, body: raw };
+    const meta = {};
+    m[1].split('\n').forEach(line => {
+      const idx = line.indexOf(':');
+      if (idx > -1) {
+        const k = line.slice(0, idx).trim();
+        const v = line.slice(idx + 1).trim().replace(/^["']|["']$/g, '');
+        meta[k] = v;
+      }
+    });
+    return { meta, body: m[2] };
+  }
+
+  // Minimal Markdown → HTML (headings, bold, italic, links, lists, paragraphs)
+  function renderMd(text) {
+    const escape = (s) => s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    const lines = text.split('\n');
+    let html = '';
+    let inList = false;
+    const flushList = () => { if (inList) { html += '</ul>'; inList = false; } };
+
+    for (let i = 0; i < lines.length; i++) {
+      let line = lines[i];
+      if (/^\s*$/.test(line)) { flushList(); continue; }
+      // Headings
+      let h = line.match(/^(#{1,3})\s+(.*)$/);
+      if (h) {
+        flushList();
+        const lvl = h[1].length;
+        html += '<h' + (lvl + 2) + '>' + inline(escape(h[2])) + '</h' + (lvl + 2) + '>';
+        continue;
+      }
+      // List items
+      if (/^\s*[-*]\s+/.test(line)) {
+        if (!inList) { html += '<ul>'; inList = true; }
+        html += '<li>' + inline(escape(line.replace(/^\s*[-*]\s+/, ''))) + '</li>';
+        continue;
+      }
+      flushList();
+      // Paragraph (collect consecutive non-blank lines)
+      let para = line;
+      while (i + 1 < lines.length && !/^\s*$/.test(lines[i+1]) && !/^(#{1,3}|\s*[-*])\s+/.test(lines[i+1])) {
+        i++;
+        para += ' ' + lines[i];
+      }
+      html += '<p>' + inline(escape(para)) + '</p>';
+    }
+    flushList();
+    return html;
+  }
+  function inline(s) {
+    return s
+      .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+      .replace(/\*(.+?)\*/g, '<em>$1</em>')
+      .replace(/\[(.+?)\]\((.+?)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>');
+  }
+
+  function postHTML(meta, body) {
+    const date = meta.date || '';
+    const title = meta.title || 'Untitled';
+    return (
+      '<article class="post">' +
+        '<div class="post-meta">' + escapeHtml(date) + '</div>' +
+        '<div class="post-title">' + escapeHtml(title) + '</div>' +
+        '<div class="post-body">' + renderMd(body) + '</div>' +
+      '</article>'
+    );
+  }
+  function escapeHtml(s) {
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+
+  async function loadPosts() {
+    if (!postList) return;
+    try {
+      const results = await Promise.all(POSTS.map(async (path) => {
+        const r = await fetch(path);
+        if (!r.ok) throw new Error('fetch failed: ' + path);
+        return parseFrontmatter(await r.text());
+      }));
+      postList.innerHTML = results.map(p => postHTML(p.meta, p.body)).join('');
+    } catch (err) {
+      // Fallback for local file:// or fetch failures
+      postList.innerHTML =
+        '<article class="post">' +
+          '<div class="post-meta">— OFFLINE PREVIEW —</div>' +
+          '<div class="post-title">Posts load from /posts on deploy</div>' +
+          '<div class="post-body"><p>When this site is served by GitHub Pages, the markdown files in <strong>/posts</strong> are fetched and rendered here.</p></div>' +
+        '</article>';
+    }
+  }
+
+})();
+</script>
+
+</body>
+</html>
